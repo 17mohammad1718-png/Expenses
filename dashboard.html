@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- Chart.js حذف شد — نمودار روند با HTML/CSS داخلی -->
 <style>
   :root{
     /* پالت تم میزبان یار */
@@ -161,6 +161,20 @@
   .cat-row .track{ background:rgba(255,255,255,0.08); border-radius:5px; height:10px; overflow:hidden; }
   .cat-row .fill{ height:100%; border-radius:5px; }
   .cat-row .amt{ text-align:left; color:var(--muted); }
+
+  /* ---------- روند ماهانه (HTML/CSS به جای Chart.js) ---------- */
+  .trend-bars{ display:flex; flex-direction:column; gap:4px; height:100%; justify-content:flex-end; }
+  .trend-row{ display:grid; grid-template-columns:75px 1fr; gap:6px; align-items:end; font-size:11px; }
+  .trend-row .m-label{ color:var(--dim); text-align:left; padding-bottom:2px; direction:ltr; white-space:nowrap; }
+  .trend-row .bars-stack{ display:flex; flex-direction:row-reverse; gap:2px; align-items:end; height:100%; min-height:18px; }
+  .trend-row .bar{ border-radius:3px 3px 0 0; min-width:4px; transition:height .2s ease; }
+  .trend-row .bar.op{ background:#38bdf8; }
+  .trend-row .bar.m{ background:#22d3ee; }
+  .trend-row .bar.z{ background:#f472b6; }
+  .trend-row .amt-tip{ font-size:9px; color:var(--dim); margin-right:4px; white-space:nowrap; direction:ltr; font-family:'JetBrains Mono',monospace; }
+  .trend-legend{ display:flex; gap:14px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
+  .trend-legend span{ display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--muted); }
+  .trend-legend .sw{ width:7px; height:7px; border-radius:2px; }
 
   /* ---------- جدول ---------- */
   .tbl-scroll{ overflow-x:auto; border:1px solid rgba(148,163,184,0.14); border-radius:14px; max-height:70vh; overflow-y:auto; }
@@ -337,7 +351,7 @@
         <div class="chart-card">
           <h3>روند ماهانه — عملیاتی در برابر برداشت محمد و زهرا</h3>
           <p>مبلغ به تومان؛ ردیف‌های مشترک نصف به هر نفر</p>
-          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+          <div class="chart-wrap" id="trendChartWrap"><div class="trend-bars" id="trendChart"></div></div>
         </div>
         <div class="chart-card">
           <h3>تفکیک بر اساس دسته</h3>
@@ -698,44 +712,44 @@ function filteredData(){
   return rows;
 }
 
-/* ── نمودار روند ماهانه ── */
-let trendChartInst = null;
+/* ── نمودار روند ماهانه (HTML/CSS خالص بدون Chart.js) ── */
 function monthOf(r){ return r.date ? r.date.slice(0,7) : (r.month||''); }
 function buildTrendChart(){
+  const wrap = $('trendChart');
+  if(!wrap) return;
   const months = [...new Set(DATA.map(monthOf))].sort();
+  if(months.length===0){ wrap.innerHTML='<div style="color:var(--dim);text-align:center;padding:30px 0">داده‌ای برای نمودار نیست</div>'; return; }
   const pers = personalTotals();
   const op = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category!=='personal').reduce((s,r)=>s+r.amount,0));
   const mSer = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category==='personal')
       .reduce((s,r)=>s+(r.who==='both'? r.amount/2 : (r.who==='m'? r.amount : 0)),0));
   const zSer = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category==='personal')
       .reduce((s,r)=>s+(r.who==='both'? r.amount/2 : (r.who==='z'? r.amount : 0)),0));
+  const maxVal = Math.max(1, ...months.map((_,i)=>op[i]+mSer[i]+zSer[i]));
   const labels = months.map(m=>MONTH_NAMES[parseInt(m.split('/')[1],10)-1]);
-  const ctx = $('trendChart');
-  if(trendChartInst) trendChartInst.destroy();
-  trendChartInst = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[
-      { label:'عملیاتی', data:op, backgroundColor:'#38bdf8', borderRadius:5, maxBarThickness:30 },
-      { label:'محمد', data:mSer, backgroundColor:'#22d3ee', borderRadius:5, maxBarThickness:30 },
-      { label:'زهرا', data:zSer, backgroundColor:'#f472b6', borderRadius:5, maxBarThickness:30 },
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{ stacked:true, grid:{display:false}, ticks:{font:{family:'Vazirmatn',size:11}, color:'#94a3b8'} },
-        y:{ stacked:true, grid:{color:'rgba(148,163,184,0.12)'}, ticks:{font:{family:'JetBrains Mono',size:10}, color:'#94a3b8',
-            callback:v=>(v/1e6).toFixed(0)+'م' } }
-      },
-      plugins:{
-        legend:{ position:'bottom', labels:{ font:{family:'Vazirmatn',size:11.5}, color:'#e6edf7', boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle' } },
-        tooltip:{
-          rtl:true, backgroundColor:'rgba(11,17,32,0.95)', borderColor:'rgba(148,163,184,0.25)', borderWidth:1, cornerRadius:8, padding:10,
-          titleFont:{family:'Vazirmatn'}, bodyFont:{family:'JetBrains Mono'},
-          callbacks:{ label: c=>` ${c.dataset.label}: ${c.parsed.y.toLocaleString('en-US')} تومان` }
-        }
-      }
-    }
-  });
+  wrap.innerHTML = labels.map((l,i)=>{
+    const oH = (op[i]/maxVal*100).toFixed(1);
+    const mH = (mSer[i]/maxVal*100).toFixed(1);
+    const zH = (zSer[i]/maxVal*100).toFixed(1);
+    const total = op[i]+mSer[i]+zSer[i];
+    return '<div class="trend-row">' +
+      '<div class="m-label">' + l + '</div>' +
+      '<div style="display:flex;align-items:end;gap:6px;flex:1">' +
+        '<div class="bars-stack" style="flex:1;height:60px;flex-direction:row">' +
+          (total>0
+            ? '<div class="bar op" style="height:' + oH + '%" title="عملیاتی: ' + fmt(op[i]) + '"></div>' +
+              '<div class="bar m" style="height:' + mH + '%" title="محمد: ' + fmt(mSer[i]) + '"></div>' +
+              '<div class="bar z" style="height:' + zH + '%" title="زهرا: ' + fmt(zSer[i]) + '"></div>'
+            : '<div style="height:2px;background:rgba(148,163,184,0.2);width:100%;align-self:end"></div>') +
+        '</div>' +
+        '<div class="amt-tip">' + fmt(total) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') + '<div class="trend-legend">' +
+    '<span><span class="sw" style="background:#38bdf8"></span>عملیاتی</span>' +
+    '<span><span class="sw" style="background:#22d3ee"></span>محمد</span>' +
+    '<span><span class="sw" style="background:#f472b6"></span>زهرا</span>' +
+  '</div>';
 }
 
 /* ── تفکیک دسته‌ها ── */
@@ -836,15 +850,30 @@ function toast(msg, err){
 }
 
 async function saveRowsAndReload(next){
-  try{
-    const res = await fetch('/api/expenses', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(next) });
-    const j = await res.json();
-    if(!res.ok || !j.ok) throw new Error(j.error||'خطا در ذخیره');
-    await loadData();
-    render();
-    toast('ذخیره شد — ' + fmt(j.total) + ' تومان جمع کل');
-  }catch(e){
-    toast('ذخیره ناموفق: ' + e.message, true);
+  if(state.storage==='server'){
+    try{
+      const res = await fetch('/api/expenses', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(next) });
+      const j = await res.json();
+      if(!res.ok || !j.ok) throw new Error(j.error||'خطا در ذخیره');
+      await loadData();
+      DATA = next;
+      render();
+      toast('ذخیره شد — ' + fmt(j.total) + ' تومان جمع کل');
+    }catch(e){
+      toast('ذخیره ناموفق: ' + e.message, true);
+    }
+  }else{
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(next));
+      DATA = next;
+      state.storage = 'browser';
+      updateStorageBadge();
+      render();
+      var total = next.reduce(function(s,r){ return s+r.amount; },0);
+      toast('ذخیره شد در مرورگر — ' + fmt(total) + ' تومان جمع کل');
+    }catch(e){
+      toast('ذخیره ناموفق در مرورگر: ' + e.message, true);
+    }
   }
 }
 
@@ -926,7 +955,12 @@ function exportJson(){
 }
 
 /* ── init ── */
-function render(){ renderKPIs(); buildCatBars(); buildTrendChart(); renderTable(); }
+function render(){ 
+  renderKPIs(); 
+  buildCatBars(); 
+  try{ buildTrendChart(); }catch(e){ console.warn('نقشه روند خراب:',e); }
+  renderTable(); 
+}
 
 async function init(){
   await loadData();
