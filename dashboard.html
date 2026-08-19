@@ -555,9 +555,10 @@ let state = {
   cats: new Set(),        // چیپ‌های فعال (کلیدهای CAT_CHIPS)
   search: '',
   sort: { key:'date', dir:-1 },
-  storage: 'server'       // 'server' | 'embedded'
+  storage: 'server'       // 'server' | 'browser' | 'static' | 'embedded'
 };
 let DATA = [];
+const LS_KEY = 'kolbeh-expenses-v1';
 
 async function loadData(){
   try{
@@ -565,9 +566,42 @@ async function loadData(){
     if(!res.ok) throw new Error('http '+res.status);
     DATA = await res.json();
     state.storage = 'server';
+    return;
+  }catch(e){ /* GitHub Pages / فایل استاتیک */ }
+
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(Array.isArray(saved) && saved.length){
+        DATA = saved;
+        state.storage = 'browser';
+        return;
+      }
+    }
+  }catch(_){ /* ignore */ }
+
+  try{
+    const res = await fetch('data/expenses.json', { cache:'no-store' });
+    if(!res.ok) throw new Error('http '+res.status);
+    DATA = await res.json();
+    state.storage = 'static';
+    return;
   }catch(e){
     DATA = JSON.parse(JSON.stringify(EMBEDDED));
     state.storage = 'embedded';
+  }
+}
+
+function updateStorageBadge(){
+  const badge = $('storageBadge');
+  if(!badge) return;
+  if(state.storage==='server'){
+    badge.innerHTML = '<span class="run-badge">● ذخیرهٔ دائمی روی دیسک فعال است</span>';
+  }else if(state.storage==='browser'){
+    badge.innerHTML = '<span class="run-badge">● ذخیره در همین مرورگر (نسخهٔ آنلاین)</span>';
+  }else{
+    badge.innerHTML = '<span class="run-badge off">○ نسخهٔ استاتیک — ویرایش‌ها در مرورگر ذخیره می‌شوند</span>';
   }
 }
 
@@ -896,12 +930,7 @@ function render(){ renderKPIs(); buildCatBars(); buildTrendChart(); renderTable(
 
 async function init(){
   await loadData();
-  const badge = $('storageBadge');
-  if(state.storage==='server'){
-    badge.innerHTML = '<span class="run-badge">● ذخیرهٔ دائمی روی دیسک فعال است</span>';
-  }else{
-    badge.innerHTML = '<span class="run-badge off">○ حالت فقط-خواندنی — برای ذخیرهٔ دائمی: node server.js</span>';
-  }
+  updateStorageBadge();
   buildCategoryFilters();
   $('btnAdd').addEventListener('click', ()=>openModal(null));
   $('btnExport').addEventListener('click', exportJson);
