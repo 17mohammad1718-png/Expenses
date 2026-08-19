@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفتر حساب کلبه</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    /* پالت تم میزبان یار */
+    --ink-950: #070b16; --ink-900: #0b1120; --ink-850: #0f172a;
+    --ink-800: #131c31; --ink-700: #1e293b; --ink-600: #334155;
+    --brand-200: #a5f3fc; --brand-300: #67e8f9; --brand-400: #22d3ee;
+    --brand-500: #06b6d4; --brand-600: #0891b2;
+    --text: #e6edf7; --muted: #94a3b8; --dim: #64748b;
+
+    --c-settlement: #fbbf24;
+    --c-personal-m: #22d3ee;
+    --c-personal-z: #f472b6;
+    --c-water:      #a78bfa;
+    --c-materials:  #fb923c;
+    --c-hospitality:#34d399;
+    --c-ads:        #fb7185;
+    --c-tax:        #ef4444;
+    --c-misc:       #94a3b8;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(1100px 620px at 92% -12%, rgba(6,182,212,0.16), transparent 62%),
+      radial-gradient(900px 520px at 4% 0%, rgba(139,92,246,0.12), transparent 58%),
+      var(--ink-950);
+    color:var(--text);
+    font-family:'Vazirmatn', sans-serif;
+    line-height:1.6;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{ font-family:'JetBrains Mono','Vazirmatn',monospace; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; }
+  ::selection{ background:var(--brand-400); color:#03151a; }
+
+  /* ---------- اسکرول‌بار تیره ---------- */
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:rgba(15,23,42,0.6); }
+  ::-webkit-scrollbar-thumb{ background:rgba(71,85,105,0.7); border-radius:999px; border:2px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover{ background:rgba(100,116,139,0.9); background-clip:content-box; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
+
+  .card{
+    border-radius:1rem;
+    border:1px solid rgba(148,163,184,0.14);
+    background:linear-gradient(180deg, rgba(19,28,49,0.9), rgba(11,17,32,0.85));
+    box-shadow:0 18px 40px -28px rgba(0,0,0,0.9);
+  }
+
+  /* ---------- هدر ---------- */
+  .cover{ position:relative; padding:30px 34px; overflow:hidden; }
+  .cover::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--brand-400), var(--c-personal-z), var(--c-settlement), var(--c-water));
+    opacity:.8;
+  }
+  .cover-inner{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .cover-eyebrow{ font-size:12.5px; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; text-transform:uppercase; }
+  .cover h1{ margin:0; font-size:clamp(26px,3.6vw,40px); font-weight:800; letter-spacing:-0.01em; color:#fff; }
+  .cover p.sub{ margin:9px 0 0; color:var(--muted); font-size:14.5px; }
+  .cover-total{ text-align:left; }
+  .cover-total .lbl{ font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .cover-total .val{ font-size:clamp(26px,3.2vw,34px); font-weight:700; color:var(--brand-300); text-shadow:0 0 24px rgba(34,211,238,0.35); }
+  .cover-total .val small{ font-size:14px; font-weight:500; color:var(--muted); margin-right:5px; text-shadow:none; }
+
+  /* ---------- KPI ---------- */
+  .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-top:16px; }
+  .kpi{ border-radius:16px; padding:17px 18px; position:relative; overflow:hidden; }
+  .kpi::before{
+    content:""; position:absolute; top:0; right:0; left:0; height:2px;
+    background:var(--kpi-color, var(--brand-400)); opacity:.9;
+  }
+  .kpi .tag{ font-size:12.5px; color:var(--muted); margin-bottom:9px; }
+  .kpi .amt{ font-size:20px; font-weight:700; color:#fff; }
+  .kpi .amt small{ font-size:12px; color:var(--muted); font-weight:500; margin-right:3px; }
+  .kpi.sub-note{ font-size:11px; color:var(--dim); margin-top:4px; }
+  .kpi.accent-total{ --kpi-color:#fff; }
+  .kpi.accent-op{ --kpi-color:var(--brand-400); }
+  .kpi.accent-m{ --kpi-color:var(--c-personal-m); }
+  .kpi.accent-z{ --kpi-color:var(--c-personal-z); }
+  .kpi.accent-avg{ --kpi-color:var(--c-water); }
+
+  /* ---------- بدنهٔ دفتر با تب ستونی ---------- */
+  .ledger{ display:grid; grid-template-columns:64px 1fr; gap:14px; margin-top:22px; }
+  @media (max-width:720px){
+    .ledger{ grid-template-columns:1fr; }
+    .spine{ flex-direction:row !important; width:100% !important; overflow-x:auto; padding:0 !important; }
+    .spine .tab{ writing-mode:horizontal-tb !important; border-radius:12px !important; margin:0 !important; padding:10px 16px !important; white-space:nowrap; }
+  }
+  .spine{ display:flex; flex-direction:column; gap:10px; padding-top:2px; }
+  .spine .tab{
+    writing-mode:vertical-rl; text-orientation:mixed;
+    border-radius:14px; padding:16px 10px;
+    font-size:12.5px; font-weight:600; color:var(--muted);
+    cursor:pointer; text-align:center; transition:all .18s ease;
+    border:1px solid rgba(148,163,184,0.14);
+    background:linear-gradient(180deg, rgba(19,28,49,0.9), rgba(11,17,32,0.85));
+  }
+  .spine .tab.active{
+    color:var(--brand-200);
+    border-color:rgba(34,211,238,0.55);
+    box-shadow:0 0 18px -5px rgba(34,211,238,0.55);
+    background:linear-gradient(180deg, rgba(34,211,238,0.14), rgba(19,28,49,0.9));
+  }
+  .spine .tab:hover{ color:#fff; border-color:rgba(34,211,238,0.35); }
+
+  .sheet{ border-radius:20px; padding:24px; }
+  .section-title{ font-size:15px; font-weight:700; margin:0 0 14px; display:flex; align-items:center; gap:9px; color:#fff; }
+  .section-title .dot{ width:8px; height:8px; border-radius:50%; background:var(--brand-400); box-shadow:0 0 10px var(--brand-400); display:inline-block; }
+
+  /* ---------- فیلترها ---------- */
+  .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid rgba(148,163,184,0.14); }
+  .chip{
+    font-size:12.5px; padding:7px 13px; border-radius:999px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.04);
+    color:var(--muted);
+    cursor:pointer; user-select:none;
+    display:inline-flex; align-items:center; gap:7px;
+    transition:all .14s ease;
+  }
+  .chip .sw{ width:8px; height:8px; border-radius:50%; }
+  .chip.active{
+    background:var(--chip-bg, rgba(34,211,238,0.2));
+    color:var(--brand-200); border-color:var(--chip-bd, rgba(34,211,238,0.7));
+    font-weight:700;
+  }
+  .chip:hover{ border-color:rgba(34,211,238,0.4); color:#fff; }
+  .search{
+    margin-right:auto; display:flex; align-items:center; gap:9px;
+    background:var(--ink-850); border:1px solid rgba(255,255,255,0.1); border-radius:12px;
+    padding:8px 13px; min-width:220px;
+  }
+  .search input{ border:none; background:transparent; outline:none; font-family:inherit; font-size:13.5px; color:var(--text); width:100%; }
+  .search input::placeholder{ color:var(--dim); }
+  .search svg{ flex:none; opacity:.55; color:var(--muted); }
+  .clear-btn{ font-size:12px; color:var(--brand-400); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
+
+  /* ---------- نمودارها ---------- */
+  .charts{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:22px; }
+  @media (max-width:900px){ .charts{ grid-template-columns:1fr; } }
+  .chart-card{ border-radius:16px; padding:18px 18px 12px; background:rgba(15,23,42,0.55); border:1px solid rgba(148,163,184,0.14); }
+  .chart-card h3{ margin:0 0 4px; font-size:13.5px; font-weight:700; color:#fff; }
+  .chart-card p{ margin:0 0 10px; font-size:11.5px; color:var(--dim); }
+  .chart-wrap{ position:relative; height:230px; }
+  .cat-bars{ display:flex; flex-direction:column; gap:10px; }
+  .cat-row{ display:grid; grid-template-columns:130px 1fr 100px; align-items:center; gap:10px; font-size:12px; }
+  .cat-row .name{ display:flex; align-items:center; gap:6px; color:var(--text); }
+  .cat-row .name .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
+  .cat-row .track{ background:rgba(255,255,255,0.08); border-radius:5px; height:10px; overflow:hidden; }
+  .cat-row .fill{ height:100%; border-radius:5px; }
+  .cat-row .amt{ text-align:left; color:var(--muted); }
+
+  /* ---------- جدول ---------- */
+  .tbl-scroll{ overflow-x:auto; border:1px solid rgba(148,163,184,0.14); border-radius:14px; max-height:70vh; overflow-y:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+  thead th{
+    text-align:right; font-size:11.5px; font-weight:700; color:var(--muted);
+    background:rgba(15,23,42,0.85); padding:11px 12px; border-bottom:1px solid rgba(148,163,184,0.14);
+    position:sticky; top:0; cursor:pointer; white-space:nowrap; z-index:2;
+  }
+  thead th.num-col, tbody td.num-col{ text-align:left; }
+  thead th:hover{ color:#fff; }
+  tbody td{ padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+  tbody tr{ transition:background .12s ease; }
+  tbody tr:hover{ background:rgba(255,255,255,0.03); }
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; padding:4px 10px; border-radius:999px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(148,163,184,0.2); color:var(--muted);
+    white-space:nowrap;
+  }
+  .badge .sw{ width:6px; height:6px; border-radius:50%; }
+  .badge-personal-m{ background:rgba(34,211,238,0.12); border-color:rgba(34,211,238,0.4); color:var(--brand-200); }
+  .badge-personal-z{ background:rgba(244,114,182,0.12); border-color:rgba(244,114,182,0.4); color:#f9a8d4; }
+  .badge-both{ background:rgba(148,163,184,0.1); border-color:rgba(148,163,184,0.35); color:#cbd5e1; }
+  .src-tag{ font-size:11px; color:var(--dim); }
+  .amt-cell{ font-weight:600; color:#fff; }
+  .op-btn{
+    background:transparent; border:1px solid rgba(148,163,184,0.25); color:var(--muted);
+    border-radius:8px; font-size:11px; padding:4px 9px; cursor:pointer; font-family:inherit; transition:all .14s;
+  }
+  .op-btn:hover{ border-color:var(--brand-400); color:var(--brand-200); }
+  .op-btn.danger:hover{ border-color:rgba(239,68,68,0.6); color:#fca5a5; }
+  .empty{ text-align:center; padding:40px 20px; color:var(--dim); font-size:13.5px; }
+  .table-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:12px; color:var(--muted); flex-wrap:wrap; gap:8px; }
+  .toolbar{ display:flex; gap:8px; align-items:center; }
+
+  /* ---------- مودال ---------- */
+  .modal-back{
+    position:fixed; inset:0; background:rgba(4,7,15,0.72); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:16px;
+  }
+  .modal-back.open{ display:flex; }
+  .modal{
+    width:min(520px,100%);
+    border-radius:18px; padding:24px;
+    border:1px solid rgba(148,163,184,0.2);
+    background:linear-gradient(180deg, #131c31, #0b1120);
+    box-shadow:0 30px 70px -30px rgba(0,0,0,0.9);
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal h3{ margin:0 0 4px; font-size:16px; color:#fff; }
+  .modal p.hint{ margin:0 0 18px; font-size:11.5px; color:var(--dim); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .field input[type=text], .field input[type=number], .field select{
+    width:100%; background:var(--ink-850); color:var(--text);
+    border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+    padding:9px 12px; font-size:13px; font-family:inherit; outline:none; transition:border .14s;
+  }
+  .field input:focus, .field select:focus{ border-color:rgba(34,211,238,0.5); }
+  .field .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btn{
+    border:none; border-radius:10px; padding:10px 18px; font-size:13.5px; font-weight:700;
+    cursor:pointer; font-family:inherit; transition:all .15s;
+    background:rgba(6,182,212,0.9); color:#fff;
+  }
+  .btn:hover{ background:var(--brand-500); }
+  .btn.ghost{ background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--brand-400); color:var(--brand-200); }
+  .btn.danger{ background:rgba(239,68,68,0.85); }
+  .btn.danger:hover{ background:#ef4444; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .who-row{ display:none; gap:8px; flex-wrap:wrap; }
+  .who-row.show{ display:flex; }
+  .who-opt{ flex:1; min-width:110px; text-align:center; padding:8px 10px; border-radius:10px; cursor:pointer; border:1px solid rgba(148,163,184,0.25); color:var(--muted); font-size:12.5px; transition:all .14s; }
+  .who-opt.sel-m{ border-color:rgba(34,211,238,0.7); color:var(--brand-200); background:rgba(34,211,238,0.12); font-weight:700; }
+  .who-opt.sel-z{ border-color:rgba(244,114,182,0.7); color:#f9a8d4; background:rgba(244,114,182,0.12); font-weight:700; }
+  .who-opt.sel-both{ border-color:rgba(148,163,184,0.6); color:#e2e8f0; background:rgba(148,163,184,0.15); font-weight:700; }
+
+  /* ---------- تقویم شمسی ---------- */
+  .date-wrap{ display:flex; gap:8px; }
+  .date-wrap input{ flex:1; }
+  .cal-back{
+    position:absolute; top:calc(100% + 6px); right:0; z-index:60;
+    width:270px; border-radius:14px; padding:14px;
+    background:linear-gradient(180deg, #131c31, #0b1120);
+    border:1px solid rgba(148,163,184,0.25);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,0.85);
+    display:none;
+  }
+  .cal-back.open{ display:block; }
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal-head .cal-title{ font-size:12.5px; color:#fff; font-weight:700; }
+  .cal-head button{ background:rgba(255,255,255,0.06); border:1px solid rgba(148,163,184,0.2); color:var(--muted); border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:13px; }
+  .cal-head button:hover{ color:#fff; border-color:var(--brand-400); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .cal-grid .dow{ font-size:10px; color:var(--dim); padding:3px 0; }
+  .cal-grid .day{
+    font-size:11.5px; padding:5px 0; border-radius:8px; cursor:pointer; color:var(--muted);
+    font-family:'JetBrains Mono',monospace; direction:ltr;
+  }
+  .cal-grid .day:hover{ background:rgba(34,211,238,0.15); color:#fff; }
+  .cal-grid .day.empty{ cursor:default; }
+  .cal-grid .day.sel{ background:rgba(6,182,212,0.9); color:#fff; font-weight:700; }
+
+  footer{ margin-top:26px; padding-top:18px; border-top:1px solid rgba(148,163,184,0.14); font-size:11.5px; color:var(--dim); line-height:1.9; }
+  footer b{ color:var(--muted); }
+  footer .run-badge{ border:1px solid rgba(34,211,238,0.4); color:var(--brand-200); background:rgba(34,211,238,0.1); padding:2px 10px; border-radius:999px; font-size:11px; margin-right:6px; }
+  footer .run-badge.off{ border-color:rgba(148,163,184,0.35); color:var(--muted); background:rgba(148,163,184,0.08); }
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:linear-gradient(180deg,#131c31,#0b1120); border:1px solid rgba(34,211,238,0.5);
+    color:#e6edf7; padding:11px 22px; border-radius:12px; font-size:13px; z-index:80;
+    transition:transform .25s ease; box-shadow:0 16px 40px -16px rgba(0,0,0,0.8);
+  }
+  .toast.show{ transform:translateX(-50%) translateY(0); }
+  .toast.err{ border-color:rgba(239,68,68,0.6); }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="cover card">
+    <div class="cover-inner">
+      <div>
+        <p class="cover-eyebrow">دفتر حساب و رسیدگی هزینه‌ها</p>
+        <h1>کلبه — بابل‌کنار</h1>
+        <p class="sub" id="subLine">—</p>
+      </div>
+      <div class="cover-total">
+        <div class="lbl">جمع کل تراکنش‌ها</div>
+        <div class="val num" id="coverTotal">—<small>تومان</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi card accent-total">
+      <div class="tag">جمع کل (عملیاتی + شخصی)</div>
+      <div class="amt num" id="kpiTotal">—</div>
+    </div>
+    <div class="kpi card accent-op">
+      <div class="tag">هزینهٔ عملیاتی کلبه</div>
+      <div class="amt num" id="kpiOperational">—</div>
+    </div>
+    <div class="kpi card accent-m">
+      <div class="tag">برداشت محمد</div>
+      <div class="amt num" id="kpiMohammad">—</div>
+      <div class="sub-note">ردیف‌های مشترک نصف نصف</div>
+    </div>
+    <div class="kpi card accent-z">
+      <div class="tag">برداشت زهرا</div>
+      <div class="amt num" id="kpiZahra">—</div>
+      <div class="sub-note">ردیف‌های مشترک نصف نصف</div>
+    </div>
+    <div class="kpi card accent-avg">
+      <div class="tag">میانگین ماهانهٔ عملیاتی</div>
+      <div class="amt num" id="kpiAvg">—</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="spine" id="spine">
+      <div class="tab active" data-src="all">همه دفترها</div>
+      <div class="tab" data-src="card">کارت ملت</div>
+      <div class="tab" data-src="water">سرویس آب</div>
+      <div class="tab" data-src="ads">تبلیغات</div>
+    </div>
+
+    <div class="sheet card">
+
+      <div class="charts">
+        <div class="chart-card">
+          <h3>روند ماهانه — عملیاتی در برابر برداشت محمد و زهرا</h3>
+          <p>مبلغ به تومان؛ ردیف‌های مشترک نصف به هر نفر</p>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>تفکیک بر اساس دسته</h3>
+          <p id="catBarsCaption">—</p>
+          <div class="cat-bars" id="catBars"></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span class="dot"></span>تراکنش‌ها</div>
+
+      <div class="filters" id="catFilters">
+        <div class="toolbar">
+          <button class="btn" id="btnAdd">＋ افزودن هزینه</button>
+          <button class="btn ghost" id="btnExport" title="دانلود JSON برای پشتیبان‌گیری">خروجی JSON</button>
+        </div>
+        <div class="search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="جستجو در شرح تراکنش…">
+        </div>
+        <button class="clear-btn" id="clearBtn">پاک‌کردن فیلترها</button>
+      </div>
+
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="id">ردیف</th>
+              <th data-sort="date">تاریخ</th>
+              <th data-sort="desc">شرح</th>
+              <th data-sort="categoryLabel">دسته</th>
+              <th data-sort="sourceLabel">دفتر</th>
+              <th data-sort="amount" class="num-col">مبلغ (تومان)</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty" style="display:none;">چیزی با این فیلتر پیدا نشد — فیلترها را پاک کن</div>
+
+      <div class="table-foot">
+        <span id="rowCount">—</span>
+        <span id="rowSum" class="num">—</span>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <b>کلاسِ ذخیره‌سازی:</b> <span id="storageBadge"></span><br>
+    <b>روش دسته‌بندی:</b> هر ردیف «برداشت شخصی» متعلق به محمد یا زهراست؛ ردیف‌های مشترک (هر دو نفر)
+    <b>نصف نصف</b> بین دو نفر تقسیم می‌شوند. «تسویه با شریک/پیمانکار» شامل پرداخت‌های بزرگ به اشخاص ثالث
+    (سوادکوهی، عزیزی، شکری) است. مبالغ «تبلیغات» و «سرویس آب» ثبت‌شده داخل شیت «کارت ملت» به همان دسته
+    منتقل شده‌اند. ویرایش‌ها در فایل <b class="num">data/expenses.json</b> ذخیره و بکاپ خودکار می‌شوند.
+  </footer>
+
+</div>
+
+<!-- مودال افزودن/ویرایش -->
+<div class="modal-back" id="modalBack">
+  <div class="modal">
+    <h3 id="modalTitle">افزودن هزینه</h3>
+    <p class="hint">مخارج با ذخیرهٔ دائمی روی دیسک ثبت می‌شوند.</p>
+
+    <div class="field">
+      <label for="fDesc">شرح</label>
+      <input type="text" id="fDesc" placeholder="مثلاً: خرید گل و گیاه">
+    </div>
+
+    <div class="field">
+      <label for="fDate">تاریخ (شمسی)</label>
+      <div class="date-wrap">
+        <input type="text" id="fDate" placeholder="1405/05/11" maxlength="10">
+        <button class="btn ghost" type="button" id="btnCal" style="padding:8px 12px;">تقویم</button>
+      </div>
+      <div class="cal-back" id="calBack"></div>
+    </div>
+
+    <div class="field">
+      <label for="fAmount">مبلغ (تومان)</label>
+      <input type="number" id="fAmount" placeholder="0" min="0" step="1000">
+    </div>
+
+    <div class="field">
+      <div class="row2">
+        <div>
+          <label for="fCategory">دسته</label>
+          <select id="fCategory"></select>
+        </div>
+        <div>
+          <label for="fSource">دفتر</label>
+          <select id="fSource">
+            <option value="card">کارت ملت</option>
+            <option value="water">سرویس آب</option>
+            <option value="ads">تبلیغات</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>برداشت از</label>
+      <div class="who-row" id="whoRow">
+        <div class="who-opt" data-who="m">محمد</div>
+        <div class="who-opt" data-who="z">زهرا</div>
+        <div class="who-opt" data-who="both">هر دو (نصف نصف)</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnCancel">انصراف</button>
+      <button class="btn danger" id="btnDelete" style="display:none; margin-left:auto;">حذف</button>
+      <button class="btn" id="btnSave">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+const EMBEDDED = [{"id": 1, "desc": "محمد", "date": "1405/02/17", "amount": 2000000, "category": "personal", "source": "card", "who": "m"}, {"id": 2, "desc": "کیک تولد بابا", "date": "1405/02/17", "amount": 550000, "category": "hospitality", "source": "card"}, {"id": 3, "desc": "آب معدنی", "date": "1405/02/17", "amount": 50000, "category": "hospitality", "source": "card"}, {"id": 4, "desc": "زهرا", "date": "1405/02/21", "amount": 2000000, "category": "personal", "source": "card", "who": "z"}, {"id": 5, "desc": "آب معدنی باکس", "date": "1405/02/22", "amount": 200000, "category": "hospitality", "source": "card"}, {"id": 6, "desc": "بستنی قیفی", "date": "1405/02/22", "amount": 200000, "category": "hospitality", "source": "card"}, {"id": 7, "desc": "تمدید آگهی شیپور", "date": "1405/02/23", "amount": 51700, "category": "ads", "source": "card"}, {"id": 8, "desc": "مالیات سنا", "date": "1405/02/28", "amount": 110000, "category": "tax", "source": "card"}, {"id": 9, "desc": "آب معدنی", "date": "1405/02/30", "amount": 45000, "category": "hospitality", "source": "card"}, {"id": 10, "desc": "خرید مغازه", "date": "1405/02/30", "amount": 348000, "category": "materials", "source": "card"}, {"id": 11, "desc": "شیپور تابلو 5000", "date": "1405/03/01", "amount": 81400, "category": "ads", "source": "card"}, {"id": 12, "desc": "کرایه حمل کولر", "date": "1405/03/04", "amount": 200000, "category": "materials", "source": "card"}, {"id": 13, "desc": "زهرا (تو دفتر )", "date": "1405/03/05", "amount": 1000000, "category": "personal", "source": "card", "who": "z"}, {"id": 14, "desc": "کرایه حمل چوب تخت", "date": "1405/03/07", "amount": 400000, "category": "materials", "source": "card"}, {"id": 15, "desc": "کیک تولد مامان", "date": "1405/03/10", "amount": 785000, "category": "hospitality", "source": "card"}, {"id": 16, "desc": "سود سوادکوهی", "date": "1405/03/12", "amount": 10000000, "category": "settlement", "source": "card"}, {"id": 17, "desc": "خرید دستمال کاغذی", "date": "1405/03/12", "amount": 289000, "category": "hospitality", "source": "card"}, {"id": 18, "desc": "دوای مورچه محمد", "date": "1405/03/15", "amount": 35000, "category": "misc", "source": "card"}, {"id": 19, "desc": "شیپورتابلو 5000", "date": "1405/03/19", "amount": 81400, "category": "ads", "source": "card"}, {"id": 20, "desc": "محمد", "date": "1405/03/24", "amount": 1000000, "category": "personal", "source": "card", "who": "m"}, {"id": 21, "desc": "زهرا", "date": "1405/03/24", "amount": 1000000, "category": "personal", "source": "card", "who": "z"}, {"id": 22, "desc": "پرداخت چک عزیزی", "date": "1405/03/24", "amount": 20000000, "category": "settlement", "source": "card"}, {"id": 23, "desc": "ثبت آگهی شیپور", "date": "1405/03/25", "amount": 51700, "category": "ads", "source": "card"}, {"id": 24, "desc": "زهرا و محمد", "date": "1405/04/01", "amount": 2000000, "category": "personal", "source": "card", "who": "both"}, {"id": 25, "desc": "زهرا و محمد", "date": "1405/04/05", "amount": 2000000, "category": "personal", "source": "card", "who": "both"}, {"id": 26, "desc": "مالیات سنا", "date": "1405/04/05", "amount": 110000, "category": "tax", "source": "card"}, {"id": 27, "desc": "هزینه خرید سنگ", "date": "1405/04/07", "amount": 6500000, "category": "materials", "source": "card"}, {"id": 28, "desc": "محمد", "date": "1405/04/17", "amount": 1000000, "category": "personal", "source": "card", "who": "m"}, {"id": 29, "desc": "زهرا", "date": "1405/04/19", "amount": 1000000, "category": "personal", "source": "card", "who": "z"}, {"id": 30, "desc": "پرداخت پول شکری محمد رضا", "date": "1405/04/17", "amount": 10000000, "category": "settlement", "source": "card"}, {"id": 31, "desc": "خرید کلبه", "date": "1405/04/18", "amount": 310000, "category": "materials", "source": "card"}, {"id": 32, "desc": "شیپورتابلو 5000", "date": "1405/04/30", "amount": 81400, "category": "ads", "source": "card"}, {"id": 33, "desc": "مالیات سنا زهرا", "date": "1405/05/05", "amount": 110000, "category": "tax", "source": "card"}, {"id": 34, "desc": "خربد دستمال کاغذی 2 عدد زهرا", "date": "1405/05/08", "amount": 200000, "category": "hospitality", "source": "card"}, {"id": 35, "desc": "محمد", "date": "1405/05/02", "amount": 1400000, "category": "personal", "source": "card", "who": "m"}, {"id": 36, "desc": "زهرا", "date": "1405/05/02", "amount": 1300000, "category": "personal", "source": "card", "who": "z"}, {"id": 37, "desc": "زهرا و محمد", "date": "1405/05/11", "amount": 2400000, "category": "personal", "source": "card", "who": "both"}, {"id": 38, "desc": "دیوارزهرا", "date": "1405/05/11", "amount": 88000, "category": "ads", "source": "card"}, {"id": 39, "desc": "بروز رسانی شیپور زهرا", "date": "1405/05/13", "amount": 41000, "category": "ads", "source": "card"}, {"id": 40, "desc": "خرید شیرینی", "date": "1405/05/21", "amount": 270000, "category": "hospitality", "source": "card"}, {"id": 41, "desc": "خرید هایپر", "date": "1405/05/21", "amount": 594000, "category": "hospitality", "source": "card"}, {"id": 42, "desc": "پول عکس به مامان", "date": "1405/05/22", "amount": 100000, "category": "misc", "source": "card"}, {"id": 43, "desc": "بدهی کلبه به زهرا", "date": "1405/05/22", "amount": 1900000, "category": "settlement", "source": "card"}, {"id": 44, "desc": "پول شکری منبع آب", "date": "1405/05/23", "amount": 5000000, "category": "water", "source": "card"}, {"id": 45, "desc": "خرید دفتر و. برای کلبه", "date": "1405/05/23", "amount": 210000, "category": "materials", "source": "card"}, {"id": 46, "desc": "محمد و زهرا", "date": "1405/05/25", "amount": 4000000, "category": "personal", "source": "card", "who": "both"}, {"id": 47, "desc": "1سرویس شکری", "date": "1405/01/03", "amount": 700000, "category": "water", "source": "water"}, {"id": 48, "desc": "1سرویس", "date": "1405/01/25", "amount": 700000, "category": "water", "source": "water"}, {"id": 49, "desc": "1سرویس", "date": "1405/02/10", "amount": 700000, "category": "water", "source": "water"}, {"id": 50, "desc": "1سرویس", "date": "1405/02/22", "amount": 700000, "category": "water", "source": "water"}, {"id": 51, "desc": "1سرویس", "date": "1405/02/30", "amount": 700000, "category": "water", "source": "water"}, {"id": 52, "desc": "1سرویس", "date": "1405/03/11", "amount": 700000, "category": "water", "source": "water"}, {"id": 53, "desc": "1سرویس", "date": "1405/04/03", "amount": 800000, "category": "water", "source": "water"}, {"id": 54, "desc": "1سرویس", "date": "1405/04/18", "amount": 800000, "category": "water", "source": "water"}, {"id": 55, "desc": "1سرویس", "date": "1405/05/14", "amount": 800000, "category": "water", "source": "water"}, {"id": 56, "desc": "1سرویس", "date": "1405/05/20", "amount": 800000, "category": "water", "source": "water"}, {"id": 57, "desc": "1سرویس", "date": "1405/05/23", "amount": 800000, "category": "water", "source": "water"}, {"id": 58, "desc": "ثبت آگهی دیوار", "date": "1405/01/15", "amount": 49000, "category": "ads", "source": "ads"}, {"id": 59, "desc": "نردبان دیوار", "date": "1405/01/23", "amount": 44000, "category": "ads", "source": "ads"}, {"id": 60, "desc": "ثبت آگهی شیپور", "date": "1405/01/23", "amount": 81400, "category": "ads", "source": "ads"}, {"id": 61, "desc": "نردبان دیوار", "date": "1405/01/29", "amount": 44000, "category": "ads", "source": "ads"}, {"id": 62, "desc": "شیپور تابلو 5000", "date": "1405/01/31", "amount": 81400, "category": "ads", "source": "ads"}, {"id": 63, "desc": "شیپور تابلو10000", "date": "1405/02/02", "amount": 147400, "category": "ads", "source": "ads"}, {"id": 64, "desc": "شیپور تابلو5000", "date": "1405/02/09", "amount": 81400, "category": "ads", "source": "ads"}, {"id": 65, "desc": "شیپور تابلو20000 استان", "date": "1405/02/15", "amount": 325600, "category": "ads", "source": "ads"}, {"id": 66, "desc": "شیپور تابلو تمدید", "date": "1405/03/01", "amount": 51700, "category": "ads", "source": "ads"}, {"id": 67, "desc": "شیپور تابلو 5000", "date": "1405/02/24", "amount": 81400, "category": "ads", "source": "ads"}, {"id": 68, "desc": "شیپورتابلو 5000", "date": "1405/03/19", "amount": 81400, "category": "ads", "source": "ads"}, {"id": 69, "desc": "ثبت آگهی شیپور", "date": "1405/03/25", "amount": 51700, "category": "ads", "source": "ads"}, {"id": 70, "desc": "شیپورتابلو 5000", "date": "1405/04/30", "amount": 81400, "category": "ads", "source": "ads"}];
+
+/* ── الگوریتم تبدیل تاریخ شمسی/میلادی (jalaali-js فشرده) ── */
+function div(a,b){ return ~~(a/b); }
+function mod(a,b){ return a-~~(a/b)*b; }
+function jalCal(jy){
+  const breaks=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+  const bl=breaks.length; let gy=jy+621, leapJ=-14, jp=breaks[0], jm, jump=0;
+  for(let i=1;i<bl;i+=1){ jm=breaks[i]; jump=jm-jp; if(jy<jm) break; leapJ=leapJ+div(jump,33)*8+div(mod(jump,33),4); jp=jm; }
+  let n=jy-jp;
+  leapJ=leapJ+div(n,33)*8+div(mod(n,33)+3,4);
+  if(mod(jump,33)===4 && jump-n===4) leapJ+=1;
+  const leapG=div(gy,4)-div((div(gy,100)+1)*3,4)-150;
+  const march=20+leapJ-leapG;
+  if(jump-n<6) n=n-jump+div(jump+4,33)*33;
+  let leap=mod(mod(n+1,33)-1,4);
+  if(leap===-1) leap=4;
+  return {leap,gy,march};
+}
+function g2d(gy,gm,gd){
+  let d=div((gy+div(gm-8,6)+100100)*1461,4)+div(153*mod(gm+9,12)+2,5)+gd-34840408;
+  d=d-div(div(gy+100100+div(gm-8,6),100)*3,4)+752;
+  return d;
+}
+function d2g(jdn){
+  let j=4*jdn+139361631;
+  j=j+div(div(4*jdn+183187720,146097)*3,4)*4-3908;
+  const i=div(mod(j,1461),4)*5+308;
+  const gd=div(mod(i,153),5)+1;
+  const gm=mod(div(i,153),12)+1;
+  const gy=div(j,1461)-100100+div(8-gm,6);
+  return {gy,gm,gd};
+}
+function d2j(jdn){
+  const gy=d2g(jdn).gy;
+  let jy=gy-621;
+  const r=jalCal(jy), jdn1f=g2d(gy,3,r.march);
+  let k=jdn-jdn1f, jd, jm;
+  if(k>=0){
+    if(k<=185){ jm=1+div(k,31); jd=mod(k,31)+1; return {jy,jm,jd}; }
+    k-=186;
+  } else {
+    jy-=1; k+=179; if(r.leap===1) k+=1;
+  }
+  jm=7+div(k,30); jd=mod(k,30)+1;
+  return {jy,jm,jd};
+}
+function j2d(jy,jm,jd){
+  const r=jalCal(jy);
+  return g2d(r.gy,3,r.march)+(jm-1)*31-div(jm,7)*(jm-7)+jd-1;
+}
+function toJalaali(gy,gm,gd){ return d2j(g2d(gy,gm,gd)); }
+
+/* ── ابردادهٔ دسته‌ها ── */
+const CAT_META = {
+  'personal': { label:'برداشت شخصی', color:'#ffffff' },
+  'settlement':{ label:'تسویه با شریک/پیمانکار', color:'#fbbf24' },
+  'water':     { label:'سرویس آب', color:'#a78bfa' },
+  'materials': { label:'مصالح و ساخت‌وساز', color:'#fb923c' },
+  'hospitality':{ label:'پذیرایی و روزمره', color:'#34d399' },
+  'ads':       { label:'تبلیغات', color:'#fb7185' },
+  'tax':       { label:'مالیات', color:'#ef4444' },
+  'misc':      { label:'متفرقه', color:'#94a3b8' },
+  'person-m':  { label:'برداشت محمد', color:'#22d3ee' },
+  'person-z':  { label:'برداشت زهرا', color:'#f472b6' },
+};
+const CAT_CHIPS = ['person-m','person-z','settlement','water','materials','hospitality','ads','tax','misc'];
+const WHO_LABEL = { m:'محمد', z:'زهرا', both:'هر دو' };
+const MONTH_NAMES = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const SOURCE_LABEL = { card:'کارت ملت', water:'سرویس آب', ads:'تبلیغات' };
+
+function fmt(n){ return (Math.round(n)).toLocaleString('en-US'); }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* برای ردیف برداشت شخصی، برچسب نمایشی */
+function personLabel(who){
+  if(who==='both') return 'برداشت مشترک (نصف نصف)';
+  return (who==='m') ? 'برداشت محمد' : 'برداشت زهرا';
+}
+function personColor(who){
+  if(who==='both') return '#cbd5e1';
+  return (who==='m') ? CAT_META['person-m'].color : CAT_META['person-z'].color;
+}
+/* مبلغ مؤثر برای فیلتر تک‌نفره — ردیف مشترک نصف می‌شود */
+function effectiveAmount(r, singlePerson){
+  if(r.category==='personal' && r.who==='both' && singlePerson) return r.amount/2;
+  return r.amount;
+}
+
+let state = {
+  source: 'all',
+  cats: new Set(),        // چیپ‌های فعال (کلیدهای CAT_CHIPS)
+  search: '',
+  sort: { key:'date', dir:-1 },
+  storage: 'server'       // 'server' | 'embedded'
+};
+let DATA = [];
+
+async function loadData(){
+  try{
+    const res = await fetch('/api/expenses', { cache:'no-store' });
+    if(!res.ok) throw new Error('http '+res.status);
+    DATA = await res.json();
+    state.storage = 'server';
+  }catch(e){
+    DATA = JSON.parse(JSON.stringify(EMBEDDED));
+    state.storage = 'embedded';
+  }
+}
+
+/* ── محاسبات ── */
+function personalTotals(){
+  let mFull=0, zFull=0, both=0;
+  for(const r of DATA){
+    if(r.category!=='personal') continue;
+    if(r.who==='m') mFull+=r.amount;
+    else if(r.who==='z') zFull+=r.amount;
+    else both+=r.amount;
+  }
+  return {
+    m: mFull + both/2,
+    z: zFull + both/2,
+    both,
+    total: mFull + zFull + both
+  };
+}
+
+function computeKPIs(){
+  const total = DATA.reduce((s,r)=>s+r.amount,0);
+  const pers = personalTotals();
+  const operational = total - pers.total;
+  const months = new Set(DATA.map(r=>r.month||r.date.slice(0,7))).size;
+  return { total, operational, m:pers.m, z:pers.z, avg: months ? operational/months : 0 };
+}
+
+function renderKPIs(){
+  const k = computeKPIs();
+  $('coverTotal').innerHTML = fmt(k.total)+'<small>تومان</small>';
+  $('kpiTotal').textContent = fmt(k.total);
+  $('kpiOperational').textContent = fmt(k.operational);
+  $('kpiMohammad').textContent = fmt(k.m);
+  $('kpiZahra').textContent = fmt(k.z);
+  $('kpiAvg').textContent = fmt(k.avg);
+  const months = [...new Set(DATA.map(r=>r.month||r.date.slice(0,7)))];
+  $('subLine').textContent =
+    months.sort().length + ' ماه · ' + DATA.length + ' ردیف · سه دفتر: کارت ملت، سرویس آب، تبلیغات';
+  $('catBarsCaption').textContent = 'سهم هر دسته از جمع کل ' + fmt(k.total) + ' تومان؛ برداشت شخصی نصف‌نصف';
+}
+
+/* ── ساخت چیپ‌های فیلتر ── */
+function buildCategoryFilters(){
+  const wrap = $('catFilters');
+  CAT_CHIPS.forEach(cat=>{
+    const meta = CAT_META[cat];
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.cat = cat;
+    chip.style.setProperty('--chip-bg', 'transparent');
+    if(cat==='person-m') chip.style.setProperty('--chip-bd', 'rgba(34,211,238,0.7)');
+    if(cat==='person-z') chip.style.setProperty('--chip-bd', 'rgba(244,114,182,0.7)');
+    chip.innerHTML = `<span class="sw" style="background:${meta.color}"></span>${meta.label}`;
+    chip.addEventListener('click', ()=>{
+      if(state.cats.has(cat)) state.cats.delete(cat); else state.cats.add(cat);
+      chip.classList.toggle('active');
+      render();
+    });
+    wrap.insertBefore(chip, wrap.querySelector('.toolbar').nextSibling);
+  });
+}
+
+/* ── فیلتر و مرتب‌سازی ── */
+function filteredData(){
+  let rows = DATA.slice();
+  if(state.source!=='all') rows = rows.filter(r=>r.source===state.source);
+  if(state.search.trim()){
+    const q = state.search.trim();
+    rows = rows.filter(r=>r.desc.includes(q) || r.date.includes(q));
+  }
+  if(state.cats.size>0){
+    rows = rows.filter(r=>{
+      if(r.category==='personal'){
+        if(state.cats.has('person-m') && (r.who==='m'||r.who==='both')) return true;
+        if(state.cats.has('person-z') && (r.who==='z'||r.who==='both')) return true;
+        return false;
+      }
+      return state.cats.has(r.category);
+    });
+  }
+  const singlePerson = state.cats.size===1 && (state.cats.has('person-m') || state.cats.has('person-z'));
+  const key = state.sort.key;
+  rows.sort((a,b)=>{
+    if(key==='categoryLabel'){
+      const av=personLabel(a.who||''), bv=personLabel(b.who||'');
+      return (av===bv ? 0 : (av<bv ? -1 : 1)) * state.sort.dir;
+    }
+    const av=a[key], bv=b[key];
+    if(typeof av==='string'){ return (av===bv ? 0 : (av<bv ? -1 : 1)) * state.sort.dir; }
+    return (av-bv)*state.sort.dir;
+  });
+  rows._singlePerson = singlePerson;
+  return rows;
+}
+
+/* ── نمودار روند ماهانه ── */
+let trendChartInst = null;
+function monthOf(r){ return r.date ? r.date.slice(0,7) : (r.month||''); }
+function buildTrendChart(){
+  const months = [...new Set(DATA.map(monthOf))].sort();
+  const pers = personalTotals();
+  const op = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category!=='personal').reduce((s,r)=>s+r.amount,0));
+  const mSer = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category==='personal')
+      .reduce((s,r)=>s+(r.who==='both'? r.amount/2 : (r.who==='m'? r.amount : 0)),0));
+  const zSer = months.map(m=>DATA.filter(r=>monthOf(r)===m && r.category==='personal')
+      .reduce((s,r)=>s+(r.who==='both'? r.amount/2 : (r.who==='z'? r.amount : 0)),0));
+  const labels = months.map(m=>MONTH_NAMES[parseInt(m.split('/')[1],10)-1]);
+  const ctx = $('trendChart');
+  if(trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'عملیاتی', data:op, backgroundColor:'#38bdf8', borderRadius:5, maxBarThickness:30 },
+      { label:'محمد', data:mSer, backgroundColor:'#22d3ee', borderRadius:5, maxBarThickness:30 },
+      { label:'زهرا', data:zSer, backgroundColor:'#f472b6', borderRadius:5, maxBarThickness:30 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{font:{family:'Vazirmatn',size:11}, color:'#94a3b8'} },
+        y:{ stacked:true, grid:{color:'rgba(148,163,184,0.12)'}, ticks:{font:{family:'JetBrains Mono',size:10}, color:'#94a3b8',
+            callback:v=>(v/1e6).toFixed(0)+'م' } }
+      },
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{family:'Vazirmatn',size:11.5}, color:'#e6edf7', boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle' } },
+        tooltip:{
+          rtl:true, backgroundColor:'rgba(11,17,32,0.95)', borderColor:'rgba(148,163,184,0.25)', borderWidth:1, cornerRadius:8, padding:10,
+          titleFont:{family:'Vazirmatn'}, bodyFont:{family:'JetBrains Mono'},
+          callbacks:{ label: c=>` ${c.dataset.label}: ${c.parsed.y.toLocaleString('en-US')} تومان` }
+        }
+      }
+    }
+  });
+}
+
+/* ── تفکیک دسته‌ها ── */
+function buildCatBars(){
+  const pers = personalTotals();
+  const entries = [
+    { label:'برداشت محمد', color:CAT_META['person-m'].color, v:pers.m },
+    { label:'برداشت زهرا', color:CAT_META['person-z'].color, v:pers.z },
+  ];
+  CAT_CHIPS.filter(c=>c!=='person-m'&&c!=='person-z').forEach(cat=>{
+    entries.push({ label:CAT_META[cat].label, color:CAT_META[cat].color, v:DATA.filter(r=>r.category===cat).reduce((s,r)=>s+r.amount,0) });
+  });
+  const max = Math.max(...entries.map(e=>e.v));
+  $('catBars').innerHTML = entries.map(e=>`
+    <div class="cat-row">
+      <div class="name"><span class="sw" style="background:${e.color}"></span>${e.label}</div>
+      <div class="track"><div class="fill" style="width:${(e.v/max*100).toFixed(1)}%;background:${e.color};box-shadow:0 0 10px -1px ${e.color}"></div></div>
+      <div class="amt num">${fmt(e.v)}</div>
+    </div>`).join('');
+}
+
+/* ── جدول ── */
+function catBadge(r){
+  if(r.category==='personal'){
+    if(r.who==='both') return `<span class="badge badge-both"><span class="sw" style="background:linear-gradient(90deg,#22d3ee 50%,#f472b6 50%)"></span>هر دو — نصف نصف</span>`;
+    return `<span class="badge ${r.who==='m'?'badge-personal-m':'badge-personal-z'}"><span class="sw" style="background:${personColor(r.who)}"></span>${personLabel(r.who)}</span>`;
+  }
+  const meta = CAT_META[r.category];
+  return `<span class="badge"><span class="sw" style="background:${meta.color}"></span>${meta.label}</span>`;
+}
+
+function renderTable(){
+  const rows = filteredData();
+  const single = rows._singlePerson;
+  const tbody = $('tblBody');
+  const empty = $('emptyState');
+  if(rows.length===0){
+    tbody.innerHTML=''; empty.style.display='block';
+  }else{
+    empty.style.display='none';
+    tbody.innerHTML = rows.map(r=>{
+      const amt = effectiveAmount(r, single);
+      const amtTxt = (amt!==r.amount) ? `<span class="num">${fmt(amt)}</span> <span style="color:#64748b;font-size:10.5px">(نصف از ${fmt(r.amount)})</span>` : `<span class="num">${fmt(r.amount)}</span>`;
+      return `<tr>
+        <td class="num">${r.id}</td>
+        <td class="num">${esc(r.date)}</td>
+        <td>${esc(r.desc)}</td>
+        <td>${catBadge(r)}</td>
+        <td class="src-tag">${SOURCE_LABEL[r.source]||r.source}</td>
+        <td class="amt-cell num-col">${amtTxt}</td>
+        <td><button class="op-btn" data-act="edit" data-id="${r.id}">ویرایش</button>
+            <button class="op-btn" data-act="del" data-id="${r.id}">حذف</button></td>
+      </tr>`;
+    }).join('');
+  }
+  let sum = rows.reduce((s,r)=>s+effectiveAmount(r,single),0);
+  $('rowCount').textContent = `${rows.length} ردیف`;
+  $('rowSum').textContent = `جمع: ${fmt(sum)} تومان${single?' (مشترک‌ها نصف)':''}`;
+}
+
+/* ── مودال ── */
+let editingId = null, chosenWho = 'm';
+const CAT_OPTIONS = [
+  ['personal','برداشت شخصی'], ['settlement','تسویه با شریک/پیمانکار'], ['water','سرویس آب'],
+  ['materials','مصالح و ساخت‌وساز'], ['hospitality','پذیرایی و روزمره'], ['ads','تبلیغات'],
+  ['tax','مالیات'], ['misc','متفرقه'],
+];
+
+function openModal(id){
+  editingId = id;
+  $('modalTitle').textContent = id==null ? 'افزودن هزینه' : `ویرایش ردیف #${id}`;
+  $('btnDelete').style.display = id==null ? 'none' : 'inline-block';
+  const sel = $('fCategory');
+  sel.innerHTML = CAT_OPTIONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  if(id==null){
+    $('fDesc').value=''; $('fDate').value=''; $('fAmount').value='';
+    sel.value='hospitality'; $('fSource').value='card';
+    setWho('m');
+  }else{
+    const r = DATA.find(x=>x.id===id);
+    $('fDesc').value=r.desc; $('fDate').value=r.date||''; $('fAmount').value=r.amount;
+    sel.value=r.category; $('fSource').value=r.source||'card';
+    setWho(r.who||'m');
+  }
+  updateWhoRow();
+  $('modalBack').classList.add('open');
+}
+function closeModal(){ $('modalBack').classList.remove('open'); $('calBack').classList.remove('open'); editingId=null; }
+function setWho(w){ chosenWho=w; document.querySelectorAll('.who-opt').forEach(el=>el.className='who-opt sel-'+(el.dataset.who===w?w:'') ); 
+  document.querySelector(`.who-opt[data-who="${w}"]`).className='who-opt sel-'+w; }
+function updateWhoRow(){ $('whoRow').classList.toggle('show', $('fCategory').value==='personal'); }
+
+function toast(msg, err){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err?' err':'');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+async function saveRowsAndReload(next){
+  try{
+    const res = await fetch('/api/expenses', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(next) });
+    const j = await res.json();
+    if(!res.ok || !j.ok) throw new Error(j.error||'خطا در ذخیره');
+    await loadData();
+    render();
+    toast('ذخیره شد — ' + fmt(j.total) + ' تومان جمع کل');
+  }catch(e){
+    toast('ذخیره ناموفق: ' + e.message, true);
+  }
+}
+
+function saveModal(){
+  const desc = $('fDesc').value.trim();
+  const date = $('fDate').value.trim();
+  const amount = Math.round(Number($('fAmount').value));
+  const category = $('fCategory').value;
+  const source = $('fSource').value;
+  if(!desc) return toast('شرح را بنویس', true);
+  if(!/^1[34]\d\d\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/.test(date)) return toast('تاریخ را به شکل 1405/05/11 وارد کن', true);
+  if(!(amount>0)) return toast('مبلغ معتبر نیست', true);
+  const row = {
+    id: editingId ?? (DATA.reduce((m,x)=>Math.max(m,x.id),0)+1),
+    desc, date, amount, category, source
+  };
+  if(category==='personal') row.who = chosenWho;
+  const next = editingId==null ? DATA.concat([row]) : DATA.map(x=>x.id===editingId?row:x);
+  closeModal();
+  saveRowsAndReload(next);
+}
+
+function delRow(id){
+  if(!confirm('ردیف #'+id+' حذف شود؟')) return;
+  closeModal();
+  saveRowsAndReload(DATA.filter(x=>x.id!==id));
+}
+
+/* ── تقویم شمسی ── */
+const JWD = ['ش','ی','د','س','چ','پ','ج'];
+let calState = { y:1405, m:1 };
+function openCal(){
+  const m = $('fDate').value.match(/^1[34]\d\d\/(\d\d)\//);
+  const now = toJalaali(new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate());
+  calState.y = m ? parseInt($('fDate').value.slice(0,4),10) : now.jy;
+  calState.m = m ? parseInt(m[1],10) : now.jm;
+  renderCal();
+  $('calBack').classList.toggle('open');
+}
+function renderCal(){
+  const {y,m} = calState;
+  const firstCol = (j2d(y,m,1)+2)%7;      // 0 = شنبه
+  const len = j2d(y,m+1,1)-j2d(y,m,1);
+  const today = toJalaali(new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate());
+  const selDate = $('fDate').value;
+  let html = `<div class="cal-head">
+      <button data-cal="prev">‹</button>
+      <span class="cal-title">${MONTH_NAMES[m-1]} ${y}</span>
+      <button data-cal="next">›</button></div>
+    <div class="cal-grid">${JWD.map(d=>`<span class="dow">${d}</span>`).join('')}`;
+  for(let i=0;i<firstCol;i++) html += '<span class="day empty"></span>';
+  for(let d=1;d<=len;d++){
+    const iso = `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+    const isToday = (y===today.jy && m===today.jm && d===today.jd);
+    const isSel = (iso===selDate);
+    html += `<span class="day ${isSel?'sel':''}" data-cal-day="${iso}">${d}</span>`;
+  }
+  $('calBack').innerHTML = html + '</div>';
+}
+function onCalClick(e){
+  const day = e.target.closest('[data-cal-day]');
+  const nav = e.target.closest('[data-cal]');
+  if(day){ $('fDate').value = day.dataset.calDay; $('calBack').classList.remove('open'); }
+  else if(nav){
+    if(nav.dataset.cal==='prev'){ calState.m-=1; if(calState.m<1){calState.m=12;calState.y-=1;} }
+    else { calState.m+=1; if(calState.m>12){calState.m=1;calState.y+=1;} }
+    renderCal();
+  }
+}
+
+/* ── خروجی JSON ── */
+function exportJson(){
+  const blob = new Blob([JSON.stringify(DATA,null,1)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'expenses-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── init ── */
+function render(){ renderKPIs(); buildCatBars(); buildTrendChart(); renderTable(); }
+
+async function init(){
+  await loadData();
+  const badge = $('storageBadge');
+  if(state.storage==='server'){
+    badge.innerHTML = '<span class="run-badge">● ذخیرهٔ دائمی روی دیسک فعال است</span>';
+  }else{
+    badge.innerHTML = '<span class="run-badge off">○ حالت فقط-خواندنی — برای ذخیرهٔ دائمی: node server.js</span>';
+  }
+  buildCategoryFilters();
+  $('btnAdd').addEventListener('click', ()=>openModal(null));
+  $('btnExport').addEventListener('click', exportJson);
+  $('btnCancel').addEventListener('click', closeModal);
+  $('btnSave').addEventListener('click', saveModal);
+  $('btnDelete').addEventListener('click', ()=>editingId!=null && delRow(editingId));
+  $('modalBack').addEventListener('click', e=>{ if(e.target===$('modalBack')) closeModal(); });
+  $('fCategory').addEventListener('change', updateWhoRow);
+  $('btnCal').addEventListener('click', openCal);
+  $('calBack').addEventListener('click', onCalClick);
+  $('whoRow').addEventListener('click', e=>{ const o=e.target.closest('.who-opt'); if(o) setWho(o.dataset.who); });
+  $('spine').addEventListener('click', e=>{
+    const tab = e.target.closest('.tab'); if(!tab) return;
+    document.querySelectorAll('.spine .tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active'); state.source = tab.dataset.src; render();
+  });
+  $('searchInput').addEventListener('input', e=>{ state.search=e.target.value; renderTable(); });
+  $('clearBtn').addEventListener('click', ()=>{
+    state.source='all'; state.cats.clear(); state.search='';
+    $('searchInput').value='';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    document.querySelectorAll('.spine .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('.spine .tab[data-src="all"]').classList.add('active');
+    render();
+  });
+  document.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.sort;
+      if(state.sort.key===key) state.sort.dir *= -1;
+      else { state.sort.key=key; state.sort.dir = (key==='date'||key==='id') ? -1 : 1; }
+      render();
+    });
+  });
+  $('tblBody').addEventListener('click', e=>{
+    const b = e.target.closest('[data-act]'); if(!b) return;
+    if(b.dataset.act==='edit') openModal(Number(b.dataset.id));
+    else delRow(Number(b.dataset.id));
+  });
+  render();
+}
+init();
+
+</script>
+</body>
+</html>
