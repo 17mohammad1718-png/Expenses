@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='72' font-size='56' text-anchor='middle' font-family='sans-serif'%3E%F0%9F%8F%A1%3C/text%3E%3C/svg%3E">
 <title>دفتر حساب کلبه</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +35,10 @@
     background:
       radial-gradient(1100px 620px at 92% -12%, rgba(6,182,212,0.16), transparent 62%),
       radial-gradient(900px 520px at 4% 0%, rgba(139,92,246,0.12), transparent 58%),
+      linear-gradient(rgba(148,163,184,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,0.035) 1px, transparent 1px),
       var(--ink-950);
+    background-size:auto, auto, 44px 44px, 44px 44px, auto;
     color:var(--text);
     font-family:'Vazirmatn', sans-serif;
     line-height:1.6;
@@ -42,6 +47,20 @@
   }
   .num{ font-family:'JetBrains Mono','Vazirmatn',monospace; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; }
   ::selection{ background:var(--brand-400); color:#03151a; }
+
+  :focus-visible{ outline:2px solid rgba(34,211,238,0.7); outline-offset:2px; border-radius:6px; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(12px); } }
+  @keyframes shimmer{ to{ background-position:250% 0; } }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  @keyframes growUp{ from{ transform:scaleY(0); } }
+  @keyframes fillX{ from{ transform:scaleX(0); } }
+  @keyframes rowIn{ from{ opacity:0; transform:translateY(5px); } }
+  @keyframes modalIn{ from{ opacity:0; transform:translateY(16px) scale(.97); } }
+  @keyframes fadeIn{ from{ opacity:0; } }
+  @keyframes toastBar{ from{ width:100%; } to{ width:0; } }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+  }
 
   /* ---------- اسکرول‌بار تیره ---------- */
   ::-webkit-scrollbar{ width:10px; height:10px; }
@@ -60,31 +79,61 @@
 
   /* ---------- هدر ---------- */
   .cover{ position:relative; padding:30px 34px; overflow:hidden; }
+  .cover{ animation:fadeUp .45s ease both; }
   .cover::before{
     content:""; position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(90deg, var(--brand-400), var(--c-personal-z), var(--c-settlement), var(--c-water));
-    opacity:.8;
+    background:linear-gradient(90deg, var(--brand-400), #f472b6, #fbbf24, #a78bfa, var(--brand-400));
+    background-size:250% 100%;
+    animation:shimmer 9s linear infinite;
+    opacity:.85;
   }
   .cover-inner{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
-  .cover-eyebrow{ font-size:12.5px; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; text-transform:uppercase; }
-  .cover h1{ margin:0; font-size:clamp(26px,3.6vw,40px); font-weight:800; letter-spacing:-0.01em; color:#fff; }
+  .cover-eyebrow{ font-size:12.5px; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; text-transform:uppercase; display:flex; align-items:center; gap:7px; }
+  .cover-eyebrow .live-dot{ width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 9px #34d399; animation:pulse 2.2s ease-in-out infinite; flex:none; }
+  .cover h1{ margin:0; font-size:clamp(26px,3.6vw,40px); font-weight:800; letter-spacing:-0.01em;
+    background:linear-gradient(92deg, #ffffff 10%, #a5f3fc 55%, #f9a8d4 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 18px rgba(34,211,238,0.18));
+  }
   .cover p.sub{ margin:9px 0 0; color:var(--muted); font-size:14.5px; }
   .cover-total{ text-align:left; }
   .cover-total .lbl{ font-size:12px; color:var(--muted); margin-bottom:5px; }
-  .cover-total .val{ font-size:clamp(26px,3.2vw,34px); font-weight:700; color:var(--brand-300); text-shadow:0 0 24px rgba(34,211,238,0.35); }
+  .cover-total .val{ font-size:clamp(26px,3.2vw,34px); font-weight:700; color:#fff;
+    background:linear-gradient(92deg, #a5f3fc, #22d3ee 60%, #67e8f9);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 22px rgba(34,211,238,0.4));
+  }
   .cover-total .val small{ font-size:14px; font-weight:500; color:var(--muted); margin-right:5px; text-shadow:none; }
 
   /* ---------- KPI ---------- */
   .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-top:16px; }
-  .kpi{ border-radius:16px; padding:17px 18px; position:relative; overflow:hidden; }
+  .kpi{ border-radius:16px; padding:16px 18px 15px; position:relative; overflow:hidden; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
   .kpi::before{
     content:""; position:absolute; top:0; right:0; left:0; height:2px;
-    background:var(--kpi-color, var(--brand-400)); opacity:.9;
+    background:linear-gradient(90deg, var(--kpi-color, var(--brand-400)), transparent 85%);
+    opacity:.95;
   }
-  .kpi .tag{ font-size:12.5px; color:var(--muted); margin-bottom:9px; }
-  .kpi .amt{ font-size:20px; font-weight:700; color:#fff; }
+  .kpi::after{
+    content:""; position:absolute; width:160px; height:160px; border-radius:50%;
+    left:-60px; top:-75px; pointer-events:none;
+    background:radial-gradient(circle, color-mix(in srgb, var(--kpi-color, var(--brand-400)) 16%, transparent), transparent 70%);
+  }
+  .kpi:hover{ transform:translateY(-3px); border-color:color-mix(in srgb, var(--kpi-color, var(--brand-400)) 45%, transparent); box-shadow:0 20px 44px -26px rgba(0,0,0,.85); }
+  .kpi .tag{ font-size:12.5px; color:var(--muted); margin-bottom:10px; }
+  .kpi .amt{ font-size:20px; font-weight:700; color:#fff; position:relative; }
   .kpi .amt small{ font-size:12px; color:var(--muted); font-weight:500; margin-right:3px; }
-  .kpi.sub-note{ font-size:11px; color:var(--dim); margin-top:4px; }
+  .kpi .sub-note{ font-size:11px; color:var(--dim); margin-top:4px; }
+  .kpi-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:2px; }
+  .kpi-ico{ flex:none; width:34px; height:34px; border-radius:11px; display:grid; place-items:center;
+    background:color-mix(in srgb, var(--kpi-color, var(--brand-400)) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--kpi-color, var(--brand-400)) 35%, transparent);
+  }
+  .kpi-ico svg{ width:17px; height:17px; color:var(--kpi-color, var(--brand-400)); }
+  .kpis .kpi:nth-child(1){ animation:fadeUp .45s .02s ease both; }
+  .kpis .kpi:nth-child(2){ animation:fadeUp .45s .07s ease both; }
+  .kpis .kpi:nth-child(3){ animation:fadeUp .45s .12s ease both; }
+  .kpis .kpi:nth-child(4){ animation:fadeUp .45s .17s ease both; }
+  .kpis .kpi:nth-child(5){ animation:fadeUp .45s .22s ease both; }
   .kpi.accent-total{ --kpi-color:#fff; }
   .kpi.accent-op{ --kpi-color:var(--brand-400); }
   .kpi.accent-m{ --kpi-color:var(--c-personal-m); }
@@ -110,12 +159,12 @@
   .spine .tab.active{
     color:var(--brand-200);
     border-color:rgba(34,211,238,0.55);
-    box-shadow:0 0 18px -5px rgba(34,211,238,0.55);
-    background:linear-gradient(180deg, rgba(34,211,238,0.14), rgba(19,28,49,0.9));
+    box-shadow:0 0 20px -4px rgba(34,211,238,0.55);
+    background:linear-gradient(180deg, rgba(34,211,238,0.18), rgba(19,28,49,0.9));
   }
-  .spine .tab:hover{ color:#fff; border-color:rgba(34,211,238,0.35); }
+  .spine .tab:hover{ color:#fff; border-color:rgba(34,211,238,0.35); filter:brightness(1.08); }
 
-  .sheet{ border-radius:20px; padding:24px; }
+  .sheet{ border-radius:20px; padding:24px; animation:fadeUp .5s .08s ease both; }
   .section-title{ font-size:15px; font-weight:700; margin:0 0 14px; display:flex; align-items:center; gap:9px; color:#fff; }
   .section-title .dot{ width:8px; height:8px; border-radius:50%; background:var(--brand-400); box-shadow:0 0 10px var(--brand-400); display:inline-block; }
 
@@ -134,9 +183,9 @@
   .chip.active{
     background:var(--chip-bg, rgba(34,211,238,0.2));
     color:var(--brand-200); border-color:var(--chip-bd, rgba(34,211,238,0.7));
-    font-weight:700;
+    font-weight:700; box-shadow:0 0 14px -4px var(--chip-bd, rgba(34,211,238,0.7));
   }
-  .chip:hover{ border-color:rgba(34,211,238,0.4); color:#fff; }
+  .chip:hover{ border-color:rgba(34,211,238,0.45); color:#fff; transform:translateY(-1px); }
   .search{
     margin-right:auto; display:flex; align-items:center; gap:9px;
     background:var(--ink-850); border:1px solid rgba(255,255,255,0.1); border-radius:12px;
@@ -145,32 +194,39 @@
   .search input{ border:none; background:transparent; outline:none; font-family:inherit; font-size:13.5px; color:var(--text); width:100%; }
   .search input::placeholder{ color:var(--dim); }
   .search svg{ flex:none; opacity:.55; color:var(--muted); }
+  .search:focus-within{ border-color:rgba(34,211,238,0.5); box-shadow:0 0 0 3px rgba(34,211,238,0.12); }
   .clear-btn{ font-size:12px; color:var(--brand-400); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
 
   /* ---------- نمودارها ---------- */
   .charts{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:22px; }
   @media (max-width:900px){ .charts{ grid-template-columns:1fr; } }
-  .chart-card{ border-radius:16px; padding:18px 18px 12px; background:rgba(15,23,42,0.55); border:1px solid rgba(148,163,184,0.14); }
+  .chart-card{ border-radius:16px; padding:18px 18px 12px; background:rgba(15,23,42,0.55); border:1px solid rgba(148,163,184,0.14); transition:border-color .18s ease, box-shadow .18s ease; }
+  .chart-card:hover{ border-color:rgba(34,211,238,0.3); box-shadow:0 16px 40px -30px rgba(34,211,238,0.4); }
   .chart-card h3{ margin:0 0 4px; font-size:13.5px; font-weight:700; color:#fff; }
   .chart-card p{ margin:0 0 10px; font-size:11.5px; color:var(--dim); }
   .chart-wrap{ position:relative; height:230px; }
   .cat-bars{ display:flex; flex-direction:column; gap:10px; }
-  .cat-row{ display:grid; grid-template-columns:130px 1fr 100px; align-items:center; gap:10px; font-size:12px; }
+  .cat-row{ display:grid; grid-template-columns:130px 1fr 125px; align-items:center; gap:10px; font-size:12px; padding:4px 8px; margin:0 -8px; border-radius:10px; transition:background .15s ease; }
+  .cat-row:hover{ background:rgba(255,255,255,0.03); }
   .cat-row .name{ display:flex; align-items:center; gap:6px; color:var(--text); }
   .cat-row .name .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
   .cat-row .track{ background:rgba(255,255,255,0.08); border-radius:5px; height:10px; overflow:hidden; }
-  .cat-row .fill{ height:100%; border-radius:5px; }
-  .cat-row .amt{ text-align:left; color:var(--muted); }
+  .cat-row .fill{ height:100%; border-radius:5px; transform-origin:100% 50%; animation:fillX .7s ease both; }
+  .cat-row .amt{ text-align:left; color:var(--text); font-weight:600; white-space:nowrap; }
+  .cat-row .amt .pct{ color:var(--dim); font-weight:400; font-size:10.5px; margin-left:5px; }
 
   /* ---------- روند ماهانه (HTML/CSS به جای Chart.js) ---------- */
   .trend-bars{ display:flex; flex-direction:column; gap:4px; height:100%; justify-content:flex-end; }
   .trend-row{ display:grid; grid-template-columns:75px 1fr; gap:6px; align-items:end; font-size:11px; }
   .trend-row .m-label{ color:var(--dim); text-align:left; padding-bottom:2px; direction:ltr; white-space:nowrap; }
   .trend-row .bars-stack{ display:flex; flex-direction:row-reverse; gap:2px; align-items:end; height:100%; min-height:18px; }
-  .trend-row .bar{ border-radius:3px 3px 0 0; min-width:4px; transition:height .2s ease; }
-  .trend-row .bar.op{ background:#38bdf8; }
-  .trend-row .bar.m{ background:#22d3ee; }
-  .trend-row .bar.z{ background:#f472b6; }
+  .trend-row .bar{ border-radius:4px 4px 2px 2px; min-width:5px; transform-origin:bottom; animation:growUp .55s ease both; }
+  .trend-row:hover .bar{ filter:brightness(1.28) saturate(1.1); }
+  .trend-row .bar.op{ background:linear-gradient(180deg,#7dd3fc,#0284c7); box-shadow:0 0 10px -2px rgba(56,189,248,.5); }
+  .trend-row .bar.m{ background:linear-gradient(180deg,#67e8f9,#0891b2); box-shadow:0 0 10px -2px rgba(34,211,238,.5); }
+  .trend-row .bar.z{ background:linear-gradient(180deg,#f9a8d4,#db2777); box-shadow:0 0 10px -2px rgba(244,114,182,.5); }
+  .trend-row .m-label.cur{ color:var(--brand-200); font-weight:700; }
+  .trend-row:hover .amt-tip{ color:var(--brand-300); }
   .trend-row .amt-tip{ font-size:9px; color:var(--dim); margin-right:4px; white-space:nowrap; direction:ltr; font-family:'JetBrains Mono',monospace; }
   .trend-legend{ display:flex; gap:14px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
   .trend-legend span{ display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--muted); }
@@ -181,14 +237,22 @@
   table{ width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
   thead th{
     text-align:right; font-size:11.5px; font-weight:700; color:var(--muted);
-    background:rgba(15,23,42,0.85); padding:11px 12px; border-bottom:1px solid rgba(148,163,184,0.14);
+    background:rgba(11,17,32,0.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    padding:12px; border-bottom:1px solid rgba(148,163,184,0.14);
     position:sticky; top:0; cursor:pointer; white-space:nowrap; z-index:2;
+    transition:color .12s ease;
   }
+  thead th[data-sort]::after{ content:'⇅'; font-size:9px; opacity:.3; margin-right:6px; position:relative; top:-1px; }
+  thead th.sorted{ color:var(--brand-200); }
+  thead th.sorted::after{ opacity:1; }
+  thead th.sorted.asc::after{ content:'↑'; }
+  thead th.sorted.desc::after{ content:'↓'; }
   thead th.num-col, tbody td.num-col{ text-align:left; }
   thead th:hover{ color:#fff; }
   tbody td{ padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
-  tbody tr{ transition:background .12s ease; }
-  tbody tr:hover{ background:rgba(255,255,255,0.03); }
+  tbody tr{ transition:background .12s ease; animation:rowIn .28s ease both; }
+  tbody tr:nth-child(even){ background:rgba(255,255,255,0.016); }
+  tbody tr:hover{ background:rgba(34,211,238,0.045); }
   .badge{
     display:inline-flex; align-items:center; gap:5px;
     font-size:11px; padding:4px 10px; border-radius:999px;
@@ -200,23 +264,25 @@
   .badge-personal-z{ background:rgba(244,114,182,0.12); border-color:rgba(244,114,182,0.4); color:#f9a8d4; }
   .badge-both{ background:rgba(148,163,184,0.1); border-color:rgba(148,163,184,0.35); color:#cbd5e1; }
   .src-tag{ font-size:11px; color:var(--dim); }
-  .amt-cell{ font-weight:600; color:#fff; }
+  .amt-cell{ font-weight:700; color:#fff; }
   .op-btn{
-    background:transparent; border:1px solid rgba(148,163,184,0.25); color:var(--muted);
-    border-radius:8px; font-size:11px; padding:4px 9px; cursor:pointer; font-family:inherit; transition:all .14s;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(148,163,184,0.22); color:var(--muted);
+    border-radius:999px; font-size:11px; padding:4px 12px; cursor:pointer; font-family:inherit;
+    transition:all .14s ease;
   }
-  .op-btn:hover{ border-color:var(--brand-400); color:var(--brand-200); }
-  .op-btn.danger:hover{ border-color:rgba(239,68,68,0.6); color:#fca5a5; }
+  .op-btn:hover{ border-color:var(--brand-400); color:var(--brand-200); background:rgba(34,211,238,0.08); }
+  .op-btn:active{ transform:scale(.96); }
+  .op-btn.danger:hover{ border-color:rgba(239,68,68,0.6); color:#fca5a5; background:rgba(239,68,68,0.08); }
   .empty{ text-align:center; padding:40px 20px; color:var(--dim); font-size:13.5px; }
   .table-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:12px; color:var(--muted); flex-wrap:wrap; gap:8px; }
   .toolbar{ display:flex; gap:8px; align-items:center; }
 
   /* ---------- مودال ---------- */
   .modal-back{
-    position:fixed; inset:0; background:rgba(4,7,15,0.72); backdrop-filter:blur(3px);
+    position:fixed; inset:0; background:rgba(4,7,15,0.78); backdrop-filter:blur(6px);
     display:none; align-items:center; justify-content:center; z-index:50; padding:16px;
   }
-  .modal-back.open{ display:flex; }
+  .modal-back.open{ display:flex; animation:fadeIn .18s ease both; }
   .modal{
     width:min(520px,100%);
     border-radius:18px; padding:24px;
@@ -224,6 +290,13 @@
     background:linear-gradient(180deg, #131c31, #0b1120);
     box-shadow:0 30px 70px -30px rgba(0,0,0,0.9);
     max-height:90vh; overflow-y:auto;
+    animation:modalIn .22s ease both;
+    position:relative;
+  }
+  .modal::before{
+    content:""; position:absolute; top:0; right:24px; left:24px; height:2px;
+    background:linear-gradient(90deg, transparent, var(--brand-400), #f472b6, transparent);
+    opacity:.8;
   }
   .modal h3{ margin:0 0 4px; font-size:16px; color:#fff; }
   .modal p.hint{ margin:0 0 18px; font-size:11.5px; color:var(--dim); }
@@ -234,22 +307,26 @@
     border:1px solid rgba(255,255,255,0.1); border-radius:10px;
     padding:9px 12px; font-size:13px; font-family:inherit; outline:none; transition:border .14s;
   }
-  .field input:focus, .field select:focus{ border-color:rgba(34,211,238,0.5); }
+  .field input:hover, .field select:hover{ border-color:rgba(148,163,184,0.3); }
+  .field input:focus, .field select:focus{ border-color:rgba(34,211,238,0.55); box-shadow:0 0 0 3px rgba(34,211,238,0.13); }
   .field .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .btn{
-    border:none; border-radius:10px; padding:10px 18px; font-size:13.5px; font-weight:700;
-    cursor:pointer; font-family:inherit; transition:all .15s;
-    background:rgba(6,182,212,0.9); color:#fff;
+    border:none; border-radius:11px; padding:10px 18px; font-size:13.5px; font-weight:700;
+    cursor:pointer; font-family:inherit; transition:all .16s ease;
+    background:linear-gradient(135deg,#06b6d4,#0891b2); color:#fff;
+    box-shadow:0 8px 20px -10px rgba(6,182,212,0.55);
   }
-  .btn:hover{ background:var(--brand-500); }
-  .btn.ghost{ background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--muted); }
-  .btn.ghost:hover{ border-color:var(--brand-400); color:var(--brand-200); }
-  .btn.danger{ background:rgba(239,68,68,0.85); }
-  .btn.danger:hover{ background:#ef4444; }
+  .btn:hover{ filter:brightness(1.12); transform:translateY(-1px); box-shadow:0 12px 24px -10px rgba(6,182,212,0.6); }
+  .btn:active{ transform:translateY(0); }
+  .btn.ghost{ background:transparent; border:1px solid rgba(148,163,184,0.3); color:var(--muted); box-shadow:none; }
+  .btn.ghost:hover{ border-color:var(--brand-400); color:var(--brand-200); filter:none; }
+  .btn.danger{ background:linear-gradient(135deg,#f87171,#dc2626); box-shadow:0 8px 20px -10px rgba(239,68,68,.5); }
+  .btn.danger:hover{ background:linear-gradient(135deg,#ef4444,#b91c1c); filter:none; }
   .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
   .who-row{ display:none; gap:8px; flex-wrap:wrap; }
   .who-row.show{ display:flex; }
-  .who-opt{ flex:1; min-width:110px; text-align:center; padding:8px 10px; border-radius:10px; cursor:pointer; border:1px solid rgba(148,163,184,0.25); color:var(--muted); font-size:12.5px; transition:all .14s; }
+  .who-opt{ flex:1; min-width:110px; text-align:center; padding:8px 10px; border-radius:10px; cursor:pointer; border:1px solid rgba(148,163,184,0.25); color:var(--muted); font-size:12.5px; transition:all .14s ease; }
+  .who-opt:hover{ border-color:rgba(148,163,184,0.5); color:var(--text); }
   .who-opt.sel-m{ border-color:rgba(34,211,238,0.7); color:var(--brand-200); background:rgba(34,211,238,0.12); font-weight:700; }
   .who-opt.sel-z{ border-color:rgba(244,114,182,0.7); color:#f9a8d4; background:rgba(244,114,182,0.12); font-weight:700; }
   .who-opt.sel-both{ border-color:rgba(148,163,184,0.6); color:#e2e8f0; background:rgba(148,163,184,0.15); font-weight:700; }
@@ -276,9 +353,12 @@
     font-size:11.5px; padding:5px 0; border-radius:8px; cursor:pointer; color:var(--muted);
     font-family:'JetBrains Mono',monospace; direction:ltr;
   }
+  .cal-grid .day{ transition:background .12s ease, box-shadow .12s ease; }
   .cal-grid .day:hover{ background:rgba(34,211,238,0.15); color:#fff; }
   .cal-grid .day.empty{ cursor:default; }
-  .cal-grid .day.sel{ background:rgba(6,182,212,0.9); color:#fff; font-weight:700; }
+  .cal-grid .day.today{ outline:1px dashed rgba(34,211,238,0.55); outline-offset:-2px; }
+  .cal-grid .day.sel{ background:linear-gradient(180deg,#06b6d4,#0891b2); color:#fff; font-weight:700; box-shadow:0 0 12px -2px rgba(34,211,238,.55); }
+  .cal-back.open{ animation:fadeIn .16s ease both; }
 
   footer{ margin-top:26px; padding-top:18px; border-top:1px solid rgba(148,163,184,0.14); font-size:11.5px; color:var(--dim); line-height:1.9; }
   footer b{ color:var(--muted); }
@@ -287,11 +367,18 @@
   .toast{
     position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px);
     background:linear-gradient(180deg,#131c31,#0b1120); border:1px solid rgba(34,211,238,0.5);
-    color:#e6edf7; padding:11px 22px; border-radius:12px; font-size:13px; z-index:80;
+    color:#e6edf7; padding:12px 24px; border-radius:12px; font-size:13px; z-index:80;
     transition:transform .25s ease; box-shadow:0 16px 40px -16px rgba(0,0,0,0.8);
+    overflow:hidden;
+  }
+  .toast::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,#22d3ee,#a5f3fc);
+    animation:toastBar 2.6s linear both;
   }
   .toast.show{ transform:translateX(-50%) translateY(0); }
   .toast.err{ border-color:rgba(239,68,68,0.6); }
+  .toast.err::before{ background:linear-gradient(90deg,#ef4444,#fca5a5); }
 </style>
 </head>
 
@@ -301,38 +388,53 @@
   <div class="cover card">
     <div class="cover-inner">
       <div>
-        <p class="cover-eyebrow">دفتر حساب و رسیدگی هزینه‌ها</p>
+        <p class="cover-eyebrow"><span class="live-dot"></span>دفتر حساب و رسیدگی هزینه‌ها</p>
         <h1>کلبه — بابل‌کنار</h1>
         <p class="sub" id="subLine">—</p>
       </div>
       <div class="cover-total">
         <div class="lbl">جمع کل تراکنش‌ها</div>
-        <div class="val num" id="coverTotal">—<small>تومان</small></div>
+        <div class="val num" id="coverTotal"><span id="coverTotalNum">—</span><small>تومان</small></div>
       </div>
     </div>
   </div>
 
   <div class="kpis">
     <div class="kpi card accent-total">
-      <div class="tag">جمع کل (عملیاتی + شخصی)</div>
+      <div class="kpi-top">
+        <div class="tag">جمع کل (عملیاتی + شخصی)</div>
+        <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10h20"/><path d="M15 14.5h3"/></svg></div>
+      </div>
       <div class="amt num" id="kpiTotal">—</div>
     </div>
     <div class="kpi card accent-op">
-      <div class="tag">هزینهٔ عملیاتی کلبه</div>
+      <div class="kpi-top">
+        <div class="tag">هزینهٔ عملیاتی کلبه</div>
+        <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3.5l9 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-5h4v5"/></svg></div>
+      </div>
       <div class="amt num" id="kpiOperational">—</div>
     </div>
     <div class="kpi card accent-m">
-      <div class="tag">برداشت محمد</div>
+      <div class="kpi-top">
+        <div class="tag">برداشت محمد</div>
+        <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg></div>
+      </div>
       <div class="amt num" id="kpiMohammad">—</div>
       <div class="sub-note">ردیف‌های مشترک نصف نصف</div>
     </div>
     <div class="kpi card accent-z">
-      <div class="tag">برداشت زهرا</div>
+      <div class="kpi-top">
+        <div class="tag">برداشت زهرا</div>
+        <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg></div>
+      </div>
       <div class="amt num" id="kpiZahra">—</div>
       <div class="sub-note">ردیف‌های مشترک نصف نصف</div>
     </div>
     <div class="kpi card accent-avg">
-      <div class="tag">میانگین ماهانهٔ عملیاتی</div>
+      <div class="kpi-top">
+        <div class="tag">میانگین ماهانهٔ عملیاتی</div>
+        <div class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 8.5 12l3.5 3.5L20 7.5"/><path d="M14.5 7.5H20V13"/></svg></div>
+      </div>
       <div class="amt num" id="kpiAvg">—</div>
     </div>
   </div>
@@ -644,14 +746,26 @@ function computeKPIs(){
   return { total, operational, m:pers.m, z:pers.z, avg: months ? operational/months : 0 };
 }
 
+/* شمارندهٔ متحرک اعداد — از مقدار فعلی به مقدار جدید */
+function tweenNum(el, target){
+  if(!el) return;
+  const cur = parseFloat(String(el.textContent).replace(/[^\d]/g,'')) || 0;
+  if(cur===target){ el.textContent = fmt(target); return; }
+  const t0 = performance.now(), dur = 600;
+  (function step(t){
+    const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,3);
+    el.textContent = fmt(cur+(target-cur)*e);
+    if(p<1) requestAnimationFrame(step);
+  })(t0);
+}
 function renderKPIs(){
   const k = computeKPIs();
-  $('coverTotal').innerHTML = fmt(k.total)+'<small>تومان</small>';
-  $('kpiTotal').textContent = fmt(k.total);
-  $('kpiOperational').textContent = fmt(k.operational);
-  $('kpiMohammad').textContent = fmt(k.m);
-  $('kpiZahra').textContent = fmt(k.z);
-  $('kpiAvg').textContent = fmt(k.avg);
+  tweenNum($('coverTotalNum'), k.total);
+  tweenNum($('kpiTotal'), k.total);
+  tweenNum($('kpiOperational'), k.operational);
+  tweenNum($('kpiMohammad'), k.m);
+  tweenNum($('kpiZahra'), k.z);
+  tweenNum($('kpiAvg'), k.avg);
   const months = [...new Set(DATA.map(r=>r.month||r.date.slice(0,7)))];
   $('subLine').textContent =
     months.sort().length + ' ماه · ' + DATA.length + ' ردیف · سه دفتر: کارت ملت، سرویس آب، تبلیغات';
@@ -727,13 +841,14 @@ function buildTrendChart(){
       .reduce((s,r)=>s+(r.who==='both'? r.amount/2 : (r.who==='z'? r.amount : 0)),0));
   const maxVal = Math.max(1, ...months.map((_,i)=>op[i]+mSer[i]+zSer[i]));
   const labels = months.map(m=>MONTH_NAMES[parseInt(m.split('/')[1],10)-1]);
+  const last = labels.length-1;
   wrap.innerHTML = labels.map((l,i)=>{
     const oH = (op[i]/maxVal*100).toFixed(1);
     const mH = (mSer[i]/maxVal*100).toFixed(1);
     const zH = (zSer[i]/maxVal*100).toFixed(1);
     const total = op[i]+mSer[i]+zSer[i];
     return '<div class="trend-row">' +
-      '<div class="m-label">' + l + '</div>' +
+      '<div class="m-label' + (i===last ? ' cur' : '') + '">' + l + '</div>' +
       '<div style="display:flex;align-items:end;gap:6px;flex:1">' +
         '<div class="bars-stack" style="flex:1;height:60px;flex-direction:row">' +
           (total>0
@@ -763,11 +878,12 @@ function buildCatBars(){
     entries.push({ label:CAT_META[cat].label, color:CAT_META[cat].color, v:DATA.filter(r=>r.category===cat).reduce((s,r)=>s+r.amount,0) });
   });
   const max = Math.max(...entries.map(e=>e.v));
+  const tot = entries.reduce((s,e)=>s+e.v,0) || 1;
   $('catBars').innerHTML = entries.map(e=>`
     <div class="cat-row">
       <div class="name"><span class="sw" style="background:${e.color}"></span>${e.label}</div>
       <div class="track"><div class="fill" style="width:${(e.v/max*100).toFixed(1)}%;background:${e.color};box-shadow:0 0 10px -1px ${e.color}"></div></div>
-      <div class="amt num">${fmt(e.v)}</div>
+      <div class="amt num">${fmt(e.v)}<span class="pct">${(e.v/tot*100).toFixed(1)}٪</span></div>
     </div>`).join('');
 }
 
@@ -805,6 +921,12 @@ function renderTable(){
       </tr>`;
     }).join('');
   }
+  document.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    const on = th.dataset.sort===state.sort.key;
+    th.classList.toggle('sorted', on);
+    th.classList.toggle('asc', on && state.sort.dir===1);
+    th.classList.toggle('desc', on && state.sort.dir===-1);
+  });
   let sum = rows.reduce((s,r)=>s+effectiveAmount(r,single),0);
   $('rowCount').textContent = `${rows.length} ردیف`;
   $('rowSum').textContent = `جمع: ${fmt(sum)} تومان${single?' (مشترک‌ها نصف)':''}`;
@@ -929,7 +1051,7 @@ function renderCal(){
     const iso = `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
     const isToday = (y===today.jy && m===today.jm && d===today.jd);
     const isSel = (iso===selDate);
-    html += `<span class="day ${isSel?'sel':''}" data-cal-day="${iso}">${d}</span>`;
+    html += `<span class="day ${isSel?'sel':''} ${isToday?'today':''}" data-cal-day="${iso}">${d}</span>`;
   }
   $('calBack').innerHTML = html + '</div>';
 }
