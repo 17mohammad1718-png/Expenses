@@ -12,17 +12,17 @@ DATA_PATH = Path(__file__).resolve().parent.parent / 'data' / 'expenses.json'
 
 # مقادیر تثبیت‌شده از اکسل اصلی (مرداد ۱۴۰۵)
 EXPECTED = {
-    'rows': 70,
-    'total': 90_494_400,
+    'rows': 76,
+    'total': 92_419_900,
     'per_category': {           # بعد از انتقال «پول شکری منبع آب» به دستهٔ آب
         'personal':   22_100_000,
         'settlement': 41_900_000,
         'water':      13_200_000,
-        'materials':   7_968_000,
-        'hospitality': 3_183_000,
+        'materials':   9_743_000,
+        'hospitality': 3_298_500,
         'ads':         1_678_400,
         'tax':           330_000,
-        'misc':          135_000,
+        'misc':          170_000,
     },
     'personal': {               # ردیف‌های مشترک نصف نصف به هر نفر اضافه می‌شوند
         'mohammad_effective': 10_600_000,
